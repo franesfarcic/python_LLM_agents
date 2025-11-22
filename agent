@@ -1,0 +1,335 @@
+import os
+!pip install perplexityai
+from perplexity import Perplexity
+
+# Add your Perplexity API key here (get it from https://perplexity.ai)
+os.environ["PERPLEXITY_API_KEY"] = "your api key"
+
+def query_perplexity_agent(prompt):
+    client = Perplexity()  # Grabs key from environment
+    completion = client.chat.completions.create(
+        model="sonar-pro",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    # Always return the main text outcome from the model
+    return completion.choices[0].message.content
+
+conversation_history = []
+
+def query_perplexity_agent_with_memory(prompt):
+    # Track full conversation, appending each user/assistant turn
+    client = Perplexity()
+    conversation_history.append({"role": "user", "content": prompt})
+
+    completion = client.chat.completions.create(
+        model="sonar-pro",
+        messages=conversation_history
+    )
+
+    response = completion.choices[0].message.content
+    conversation_history.append({"role": "assistant", "content": response})
+    return response
+
+import requests
+import xml.etree.ElementTree as ET
+
+def web_search(query):
+    # Placeholder: real web search should connect to an API!
+    return f"Web search results for: {query}"
+
+def arxiv_search(query, max_results=3):
+    base_url = "http://export.arxiv.org/api/query"
+    params = {
+        "search_query": f"all:{query}",
+        "start": 0,
+        "max_results": max_results
+    }
+    url = f"{base_url}?search_query={params['search_query']}&start={params['start']}&max_results={params['max_results']}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return "Error accessing arXiv"
+    root = ET.fromstring(response.content)
+    results = []
+    for entry in root.findall('{http://www.w3.org/2005/Atom}entry'):
+        title = entry.find('{http://www.w3.org/2005/Atom}title').text.strip()
+        link = entry.find('{http://www.w3.org/2005/Atom}id').text.strip()
+        results.append(f"{title}\n{link}")
+    return "\n\n".join(results) if results else "No results found"
+
+def scholar_search(query):
+    # TODO: Replace this stub with a real Google Scholar integration
+    return f"Google Scholar search results for: {query}"
+
+tools = {
+    "web_search": web_search,
+    "arxiv_search": arxiv_search,
+    "scholar_search": scholar_search,
+}
+
+def query_perplexity_agent_with_tools(prompt, tool_name=None):
+    if tool_name:
+        if tool_name in tools:
+            # Call the correct tool, using the prompt as input
+            tool_result = tools[tool_name](prompt)
+            return f"Tool result: {tool_result}"
+        else:
+            return "Tool not found"
+    # Fallback: use Perplexity for generation
+    client = Perplexity()
+    completion = client.chat.completions.create(
+        model="sonar-pro",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return completion.choices[0].message.content
+
+import re
+
+def dynamic_tool_selection(prompt):
+    """
+    Returns the tool name based on keywords in the prompt. Extend the rules as needed!
+    """
+    if re.search(r"number|constant|measure|experiment|observe|value|fact|how many|when|mass|energy|speed|charge", prompt, re.IGNORECASE):
+        return "web_search"
+    if re.search(r"paper|arxiv|research|recent article|study", prompt, re.IGNORECASE):
+        return "arxiv_search"
+    if re.search(r"cite|citation|reference|scholar", prompt, re.IGNORECASE):
+        return "scholar_search"
+    return None
+
+def query_perplexity_advanced_agent(prompt):
+    """
+    Chooses and runs a tool, or defaults to Perplexity LLM if none match.
+    """
+    tool_name = dynamic_tool_selection(prompt)
+    if tool_name:
+        if tool_name in tools:
+            tool_result = tools[tool_name](prompt)
+            return f"Tool result: {tool_result}"
+        else:
+            return "Tool not found"
+    client = Perplexity()
+    completion = client.chat.completions.create(
+        model="sonar-pro",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return completion.choices[0].message.content
+
+def feedback_loop(prompt, response):
+    """
+    Quick feedback on response length.
+    """
+    if len(response) < 50:
+        return "Could use more detail."
+    elif len(response) > 500:
+        return "Try to keep it shorter."
+    return "Response looks good."
+
+def query_perplexity_with_feedback(prompt):
+    response = query_perplexity_advanced_agent(prompt)
+    suggestion = feedback_loop(prompt, response)
+    return f"Response: {response}\nFeedback: {suggestion}"
+
+import logging
+logging.basicConfig(level=logging.INFO)
+
+def query_perplexity_with_error_handling(prompt):
+    try:
+        response = query_perplexity_advanced_agent(prompt)
+        logging.info(f"Prompt: {prompt}, Response: {response}")
+        return response
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return "Something went wrong; try again."
+
+class User:
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+
+users = {"alice": "secret", "bob": "secret2"}
+
+def authenticate_user(username, password):
+    return username in users and users[username] == password
+
+def query_perplexity_secure_agent(prompt, username, password):
+    if not authenticate_user(username, password):
+        return "Authentication failed."
+    return query_perplexity_with_error_handling(prompt)
+
+!pip install requests
+import requests
+
+class HuggingFaceAPIClient:
+    def __init__(self, api_token, model="gpt2"):
+        self.api_token = api_token
+        self.model = model
+
+    def query(self, prompt):
+        url = f"https://router.huggingface.co/hf-inference/{self.model}"
+        headers = {"Authorization": f"Bearer {self.api_token}"}
+        data = {"inputs": prompt}
+        r = requests.post(url, headers=headers, json=data)
+        if r.status_code != 200:
+            return f"Error: {r.text}"
+        out = r.json()
+        if isinstance(out, list) and "generated_text" in out[0]:
+            return out[0]["generated_text"]
+        return str(out)
+
+api_token = "your api key"
+client = HuggingFaceAPIClient(api_token)
+response = client.query("What is quantum entanglement?")
+print(response)
+
+!pip install -U langchain langchain-community langchain-huggingface transformers
+
+from langchain_core.tools import Tool
+from langchain_community.llms import HuggingFacePipeline
+from transformers import pipeline
+
+hf_pipe = pipeline("text-generation", model="openai-community/gpt2")
+llm = HuggingFacePipeline(pipeline=hf_pipe)
+
+def web_search_tool(query):
+    # Demo only; doesn't actually search the web
+    return f"Web search results for: {query}"
+
+tools = [
+    Tool(
+        name="web_search",
+        func=web_search_tool,
+        description="Performs a web search for factual queries"
+    ),
+]
+
+class SimpleAgentExecutor:
+    def __init__(self, llm, tools):
+        self.llm = llm
+        self.tools = {tool.name: tool for tool in tools}
+
+    def run(self, input_text):
+        # Only triggers web search if "search" is in query; simplistic logic!
+        if "search" in input_text.lower():
+            return self.tools["web_search"].func(input_text)
+        else:
+            return self.llm.invoke(input_text)
+
+agent_executor = SimpleAgentExecutor(llm, tools)
+
+print(agent_executor.run("search quantum mechanics Nobel prizes"))
+print(agent_executor.run("Explain quantum decoherence."))
+
+# Note: This demo agent is intentionally minimal. Real workflows should expand the prompt parser,
+# connect tools to real APIs, and swap in stronger LLMs for better results.
+
+import openai
+import os
+
+class OpenAIAgent:
+    def __init__(self, api_key=None, model="gpt-3.5-turbo"):
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        openai.api_key = self.api_key
+        self.model = model
+
+    def query(self, prompt):
+        response = openai.ChatCompletion.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+
+# Example usage:
+# openai_agent = OpenAIAgent(api_key="YOUR_OPENAI_KEY")
+# print(openai_agent.query("What is a Dyson Sphere?"))
+
+!pip install anthropic
+import anthropic
+import os
+
+class AnthropicAgent:
+    def __init__(self, api_key=None, model="claude-2"):
+        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self.client = anthropic.Anthropic(api_key=self.api_key)
+        self.model = model
+
+    def query(self, prompt):
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.content[0].text  # Field may differ depending on SDK version
+
+# Example usage:
+# anthropic_agent = AnthropicAgent(api_key="YOUR_ANTHROPIC_KEY")
+# print(anthropic_agent.query("Is Dyson Sphere a joke?"))
+
+# Real-world agent: LangChain + Perplexity LLM + arXiv search tool
+
+from langchain.agents import Tool, initialize_agent, AgentType
+from langchain.llms.base import LLM
+from pydantic import Field
+from typing import List, Optional
+import requests
+import xml.etree.ElementTree as ET
+import os
+
+class PerplexityLLM(LLM):
+    api_key: str = Field(...)
+    @property
+    def _llm_type(self):
+        return "perplexity"
+    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        from perplexity import Perplexity
+        os.environ["PERPLEXITY_API_KEY"] = self.api_key
+        client = Perplexity()
+        completion = client.chat.completions.create(
+            model="sonar-pro",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return completion.choices[0].message.content
+
+def arxiv_search(query: str, max_results=2):
+    base_url = "http://export.arxiv.org/api/query"
+    params = {
+        "search_query": f"all:{query}",
+        "start": 0,
+        "max_results": max_results
+    }
+    url = f"{base_url}?search_query={params['search_query']}&start={params['start']}&max_results={params['max_results']}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return "Error accessing arXiv"
+    root = ET.fromstring(response.content)
+    results = []
+    for entry in root.findall('{http://www.w3.org/2005/Atom}entry'):
+        title = entry.find('{http://www.w3.org/2005/Atom}title').text.strip()
+        link = entry.find('{http://www.w3.org/2005/Atom}id').text.strip()
+        summary = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
+        results.append(f"Title: {title}\nLink: {link}\nSummary: {summary}")
+    return "\n\n".join(results) if results else "No arXiv results found."
+
+arxiv_tool = Tool(
+    name="arxiv_search",
+    func=arxiv_search,
+    description="Searches arXiv for recent research papers and returns title, summary, and link."
+)
+
+PERPLEXITY_API_KEY = "YOUR_PERPLEXITY_API_KEY_HERE"
+
+perplexity_llm = PerplexityLLM(api_key=PERPLEXITY_API_KEY)
+
+agent = initialize_agent(
+    tools=[arxiv_tool],
+    llm=perplexity_llm,
+    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=True,
+    handle_parsing_errors=True
+)
+
+query = "Find recent arXiv papers about quantum decoherence."
+result = agent.run(query)
+print(result)
+
+# Note: This agent pipeline mixes LLM-powered answers with real arXiv retrievals.
+# To extend, add more custom tools or switch models (see LangChain docs for details).
