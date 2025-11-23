@@ -1,6 +1,6 @@
 
 
-Modular LLM Agent Toolkit
+# Modular LLM Agent Toolkit
 A hands-on framework for building, integrating, and testing large language model (LLM) agents, retrieval-augmented generation (RAG), and domain-adaptive research tools—ready for real-world AI/ML product deployment.
 
 🚀 What’s Inside
@@ -16,7 +16,7 @@ Conversational context memory, error handling, user authentication modules
 
 I ran this on agent on Google Colab
 
-🏗️ Example Prompts & Outputs
+ # Example Prompts & Outputs
 
 I tried out some physics related prompts to check out the validity of the agent.
 
@@ -41,7 +41,7 @@ The measurement problem can be further divided into three core issues[4]:
 
 ###--------------###
 
-# Multi-turn conversation (memory)
+ Multi-turn conversation (memory)
 print("\n--- Memory: Multi-turn Conversation ---")
 response1 = query_perplexity_agent_with_memory("Explain quantum superposition.")
 print("Turn 1:", response1)
@@ -186,11 +186,11 @@ Error handling: An error occurred. Please try again.
 
 ###--------------###
 
-# Correct credentials
+ Correct credentials
 auth_success = query_perplexity_secure_agent("What is the Heisenberg uncertainty principle?", "alice", "secret")
 print("Auth success:", auth_success)
 
-# Incorrect credentials
+ Incorrect credentials
 auth_fail = query_perplexity_secure_agent("What is a quantum measurement?", "alice", "wrongpassword")
 print("Auth fail:", auth_fail)
 
@@ -227,14 +227,14 @@ http://arxiv.org/abs/1608.06329v2
 ###--------------###
 
 # LangChain agent: combines Perplexity LLM with arXiv search tool
-# Compatible with Python and Colab
-# This script uses LangChain to build a hybrid agent around the Perplexity Sonar-Pro LLM and
-# arXiv search API. The agent intelligently routes queries, parses tool actions, and outputs
-# cited, up-to-date summaries of current quantum research.
-# This can be extended with additional tools (web search, scholar, etc.), switched to
-# other LLM providers, or integrated into an API, notebook, or web service.
+ Compatible with Python and Colab
+ This script uses LangChain to build a hybrid agent around the Perplexity Sonar-Pro LLM and
+ arXiv search API. The agent intelligently routes queries, parses tool actions, and outputs
+ cited, up-to-date summaries of current quantum research.
+ This can be extended with additional tools (web search, scholar, etc.), switched to
+ other LLM providers, or integrated into an API, notebook, or web service.
 
-# --- Example Query ---
+ --- Example Query ---
 query = "Find recent arXiv papers about quantum decoherence."
 result = agent.run(query)
 print(result)
