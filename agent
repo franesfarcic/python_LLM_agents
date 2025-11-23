@@ -2,7 +2,7 @@ import os
 !pip install perplexityai
 from perplexity import Perplexity
 
-# Add your Perplexity API key here (get it from https://perplexity.ai)
+# Add your Perplexity API key here 
 os.environ["PERPLEXITY_API_KEY"] = "your api key"
 
 def query_perplexity_agent(prompt):
@@ -11,7 +11,7 @@ def query_perplexity_agent(prompt):
         model="sonar-pro",
         messages=[{"role": "user", "content": prompt}]
     )
-    # Always return the main text outcome from the model
+   
     return completion.choices[0].message.content
 
 conversation_history = []
