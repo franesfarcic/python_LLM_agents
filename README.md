@@ -14,6 +14,19 @@ Retrieval-augmented generation (RAG) support: Combines LLM generation with live 
 
 Conversational context memory, error handling, user authentication modules
 
+# Extending & Integrating
+FastAPI/Deployment:
+Easily wrap the agent with a FastAPI endpoint for API deployment ([code snippet included in repo]).
+
+Add more tools:
+Create new research, data, or workflow integrations by plugging in custom functions.
+
+Swap LLMs:
+Use Hugging Face, OpenAI, Anthropic, or Perplexity by changing one config line.
+
+MLOps-ready:
+Prepared for CI/CD, model monitoring, and deployment to GCP, Kubernetes, or Vertex AI.
+
 I ran this on agent on Google Colab
 
  # Example Prompts & Outputs
